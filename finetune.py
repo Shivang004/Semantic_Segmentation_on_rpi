@@ -2,7 +2,7 @@ import torch
 import os
 import time
 import numpy as np
-from tqdm.notebook import tqdm
+from tqdm import tqdm
 from torch import nn
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision.models.segmentation import deeplabv3_resnet101
