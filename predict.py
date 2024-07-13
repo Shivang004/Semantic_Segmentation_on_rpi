@@ -8,33 +8,28 @@ from torchvision.models._utils import IntermediateLayerGetter
 from torchvision.models.mobilenetv3 import mobilenet_v3_small
 from model.lrassp_mobilenetv3_small import load_lraspp_mobilenet_v3_small
 
-# Function to load LRASPP model
-def load_pretrained_model(checkpoint_path, num_classes, device):
-    model = load_lraspp_mobilenet_v3_small(checkpoint_path, num_classes=num_classes, device=device)   
-    return model
-
 # Define the device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Define the path to your pretrained model checkpoint
-checkpoint_path = 'lraspp_mbv3_small.pth'
+checkpoint_path = 'checkpoint.pth'
 
 # Number of classes in your dataset
-num_classes = 21
+num_classes = 16
 
 # Load the model
-model_small = load_pretrained_model(checkpoint_path, num_classes, device)
+model_small = load_lraspp_mobilenet_v3_small(checkpoint_path, num_classes,finetuning=False, device)
 model_small.eval().to(device)
 
 # Define the image transformation
 transform = T.Compose([
-    T.Resize((256, 256)),  # Resize to the input size expected by the model
+    # T.Resize((256, 256)),  # Resize to the input size expected by the model
     T.ToTensor(),          # Convert the image to a PyTorch tensor
     T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),  # Normalize the tensor
 ])
 
 # Load the image
-image_path = 'city.jpg'
+image_path = 'image.jpg'
 image = Image.open(image_path).convert('RGB')
 
 # Apply the transformation
