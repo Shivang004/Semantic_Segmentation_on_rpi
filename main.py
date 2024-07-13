@@ -54,7 +54,7 @@ if __name__ == "__main__":
     max_lr = 1e-3
     epochs = 100
     weight_decay = 1e-4
-    epoch_after_unfreeze = 10
+    epochs_after_unfreeze = 10
 
     # Load pretrained model
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, steps_per_epoch=len(train_loader))
     print(model.eval())
     # Train the model
-    history = fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler,device=device,epoch_after_unfreeze=epoch_after_unfreeze)
+    history = fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler,device=device,epochs_after_unfreeze=epochs_after_unfreeze)
     
     # Optionally save the trained model
     torch.save(model.state_dict(), 'finetuned_model.pth')
