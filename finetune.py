@@ -15,7 +15,7 @@ def get_lr(optimizer):
     for param_group in optimizer.param_groups:
         return param_group['lr']
     
-def fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler, unfreeze_layers=[], patch=False,device='cpu',epoch_after_unfreeze=10):
+def fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler, unfreeze_layers=[], patch=False, resume_checkpoint=None,device='cpu', epochs_after_unfreeze=19):
     torch.cuda.empty_cache()
     train_losses = []
     val_losses = []
@@ -27,10 +27,33 @@ def fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler
     min_val_loss = np.inf
     decrease = 1
     not_improve = 0
+    start_epoch = 0
     
+    model.to(device)
     fit_time = time.time()
     
-    for e in range(epochs):
+    if resume_checkpoint:
+        if os.path.isfile(resume_checkpoint):
+            print(f"Resuming training from checkpoint: {resume_checkpoint}")
+            checkpoint = torch.load(resume_checkpoint)
+            model.load_state_dict(checkpoint['model_state_dict'])
+            optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            start_epoch = checkpoint['epoch']
+            min_val_loss = checkpoint['min_val_loss']
+            train_losses = checkpoint['train_losses']
+            val_losses = checkpoint['val_losses']
+            train_iou = checkpoint['train_iou']
+            val_iou = checkpoint['val_iou']
+            train_acc = checkpoint['train_acc']
+            val_acc = checkpoint['val_acc']
+            lrs = checkpoint['lrs']
+            decrease = checkpoint['decrease']
+            not_improve = checkpoint['not_improve']
+        else:
+            print(f"Checkpoint file not found at {resume_checkpoint}. Starting fresh training.")
+    
+    for e in range(start_epoch, epochs):
         since = time.time()
         running_loss = 0.0
         running_iou = 0.0
@@ -106,8 +129,8 @@ def fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler
         lrs.append(get_lr(optimizer))
         scheduler.step()
         
-        # Gradually unfreeze layers after n epochs
-        if e == (epoch_after_unfreeze-1):  # Unfreeze layers after 10 epochs
+        # Gradually unfreeze layers after 5 epochs
+        if e == epochs_after_unfreeze:  # Unfreeze layers after 5 epochs
             print("Unfreezing layers...")
             for param in model.backbone.parameters():
                 param.requires_grad = True
@@ -118,11 +141,26 @@ def fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler
             min_val_loss = val_losses[-1]
             decrease += 1
             if decrease % 5 == 0:
-                torch.save(model.state_dict(), f"finetuned_model_epoch_{e+1}.pt")
+                torch.save({
+                    'epoch': e + 1,
+                    'model_state_dict': model.state_dict(),
+                    'optimizer_state_dict': optimizer.state_dict(),
+                    'scheduler_state_dict': scheduler.state_dict(),
+                    'min_val_loss': min_val_loss,
+                    'train_losses': train_losses,
+                    'val_losses': val_losses,
+                    'train_iou': train_iou,
+                    'val_iou': val_iou,
+                    'train_acc': train_acc,
+                    'val_acc': val_acc,
+                    'lrs': lrs,
+                    'decrease': decrease,
+                    'not_improve': not_improve
+                }, f"checkpoint.pth")
         else:
             not_improve += 1
-            if not_improve == 7:
-                print("Validation loss did not improve for 7 epochs. Stopping training.")
+            if not_improve == 5:
+                print("Validation loss did not improve for 5 epochs. Stopping training.")
                 break
     
     print(f"Total training time: {(time.time() - fit_time) / 60:.2f} min")
