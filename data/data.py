@@ -18,8 +18,13 @@ class ADE20kSegmentationDataset(Dataset):
 
         self.images_folder = os.path.join(self.root, 'images', self.split)
         self.annotations_folder = os.path.join(self.root, 'annotations', self.split)
-        self.valid_classes = [1, 4, 6, 8, 9, 11, 13, 15, 16, 20, 24, 25, 31, 34, 36, 50, 54, 63, 70, 74]
-        self.class_map = {class_id: index + 1 for index, class_id in enumerate(self.valid_classes)}
+        self.valid_classes = [1,4,6,8,9,11,13,15,16,19,20,24,25,29,31,34,36,54,58,63,70,74,76,132]  # Example: focus on these classes
+        self.class_map = {
+                    1: 0, 4: 1, 6: 2, 8: 3, 9: 4, 11: 5, 13: 6, 15: 7, 16: 8,19:8, 
+                    20: 9, 24: 10, 25: 11, 34: 8, 36: 5, 54: 12, 63: 13, 70: 14, 74: 15, 
+                    29: 1, 31: 9, 76: 9,58:3,132:3  # Mapping combined classes
+                }
+        self.ignore_index=-1
         self._load_images_and_masks()
 
     def _load_images_and_masks(self):
@@ -92,7 +97,7 @@ class ADE20kSegmentationDataset(Dataset):
 
     def _mask_transform(self, mask):
         mask_np = np.array(mask)
-        mask_np_mapped = np.zeros_like(mask_np, dtype=np.int32)  # Initialize with zeros
+        mask_np_mapped = np.full_like(mask_np, fill_value=self.ignore_index, dtype=np.int32)  # Initialize with ignore index
 
         for class_id, mapped_index in self.class_map.items():
             mask_np_mapped[mask_np == class_id] = mapped_index
