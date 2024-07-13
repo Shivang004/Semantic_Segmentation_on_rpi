@@ -8,10 +8,6 @@ from data.data import ADE20kSegmentationDataset
 from model.lrassp_mobilenetv3_small import load_lraspp_mobilenet_v3_small
 import matplotlib.pyplot as plt
 
-def load_pretrained_model(checkpoint_path, num_classes, device):
-    model = load_lraspp_mobilenet_v3_small(checkpoint_path, num_classes=num_classes, device=device)   
-    return model
-
 def plot_loss(history):
     plt.plot(history['val_loss'], label='val', marker='o')
     plt.plot( history['train_loss'], label='train', marker='o')
@@ -62,7 +58,7 @@ if __name__ == "__main__":
     num_classes = 16
     print("Device: ", device)
     # Load pretrained model
-    model = load_pretrained_model(checkpoint_path, num_classes=num_classes,finetuning=True, device=device)
+    model = load_lraspp_mobilenet_v3_small(checkpoint_path, num_classes=num_classes,finetuning=True, device=device)
     model.to(device)
     
     # Freeze backbone layers
