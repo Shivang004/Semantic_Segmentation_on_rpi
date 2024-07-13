@@ -5,7 +5,6 @@ from PIL import Image
 
 # Define your colors and colormap
 colors = [
-    [0.0, 0.0, 0.0],    # Class 0: Black
     [0.5, 0.5, 0.5],    # Class 1: Gray
     [1.0, 0.0, 0.0],    # Class 2: Red
     [0.0, 1.0, 0.0],    # Class 3: Green
@@ -22,10 +21,6 @@ colors = [
     [0.75, 0.25, 0.0],  # Class 14: Brown
     [0.75, 0.0, 0.25],  # Class 15: Maroon
     [0.25, 0.75, 0.0],  # Class 16: Lime
-    [0.0, 0.75, 0.25],  # Class 17: Sea Green
-    [0.25, 0.0, 0.75],  # Class 18: Indigo
-    [0.0, 0.25, 0.75],  # Class 19: Steel Blue
-    [1.0, 1.0, 1.0]     # Class 20: White
 ]
 
 
@@ -54,14 +49,14 @@ def plot_image_mask(image, mask):
     plt.show()
 
 # Example usage:
-num_classes = len(colors)
-colors_map = ListedColormap(colors)
-image_path = ''
-mask_path = ''
-# Load image and mask
-img = Image.open(image_path)
-mask = Image.open(mask_path)
+# num_classes = len(colors)
+# colors_map = ListedColormap(colors)
+# image_path = 'path'
+# mask_path = 'path'
+# # Load image and mask
+# img = Image.open(image_path)
+# mask = Image.open(mask_path)
 
-# Convert mask to numpy array
-mask_np = np.array(mask)
-plot_image_mask(img, mask_np)
+# # Convert mask to numpy array
+# mask_np = np.array(mask)
+# plot_image_mask(img, mask_np)
