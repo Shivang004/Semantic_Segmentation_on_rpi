@@ -18,7 +18,7 @@ checkpoint_path = 'checkpoint.pth'
 num_classes = 16
 
 # Load the model
-model_small = load_lraspp_mobilenet_v3_small(checkpoint_path, num_classes,finetuning=False, device)
+model_small = load_lraspp_mobilenet_v3_small(checkpoint_path, num_classes,finetuning=False, device=device)
 model_small.eval().to(device)
 
 # Define the image transformation
@@ -49,4 +49,4 @@ output_array = output_tensor.detach().cpu().numpy()
 output_image = np.argmax(output_array, axis=1)[0]
 
 # Visualize the original image and the segmentation mask
-plot_image_mask(image, output_image)
+plot_image_mask(image, output_image,num_classes=16)
