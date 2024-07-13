@@ -79,7 +79,7 @@ def load_lraspp_mobilenet_v3_small(checkpoint_path: str, num_classes: int, finet
         model_dict.update(pretrained_dict)
         model.load_state_dict(model_dict)
     else:
-        pretrained_dict=torch.load(checkpoint_path, map_location=device)
+        pretrained_dict=torch.load(checkpoint_path, map_location=device)['model_state_dict']
         model.load_state_dict(pretrained_dict)
         
     return model
