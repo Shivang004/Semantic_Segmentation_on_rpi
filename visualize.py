@@ -1,62 +1,52 @@
-import matplotlib.pyplot as plt
-from matplotlib.colors import ListedColormap
+import torch
+import torchvision.transforms as T
 import numpy as np
+import matplotlib.pyplot as plt
 from PIL import Image
+from visualize import plot_image_mask
+from torchvision.models._utils import IntermediateLayerGetter
+from torchvision.models.mobilenetv3 import mobilenet_v3_small
+from model.lrassp_mobilenetv3_small import load_lraspp_mobilenet_v3_small
 
-# Define your colors and colormap
-colors = [
-    [0.5, 0.5, 0.5],    # Class 1: Gray
-    [1.0, 0.0, 0.0],    # Class 2: Red
-    [0.0, 1.0, 0.0],    # Class 3: Green
-    [0.0, 0.0, 1.0],    # Class 4: Blue
-    [1.0, 1.0, 0.0],    # Class 5: Yellow
-    [1.0, 0.0, 1.0],    # Class 6: Magenta
-    [0.0, 1.0, 1.0],    # Class 7: Cyan
-    [0.5, 0.0, 0.0],    # Class 8: Dark Red
-    [0.0, 0.5, 0.0],    # Class 9: Dark Green
-    [0.0, 0.0, 0.5],    # Class 10: Dark Blue
-    [0.5, 0.5, 0.0],    # Class 11: Olive
-    [0.5, 0.0, 0.5],    # Class 12: Purple
-    [0.0, 0.5, 0.5],    # Class 13: Teal
-    [0.75, 0.25, 0.0],  # Class 14: Brown
-    [0.75, 0.0, 0.25],  # Class 15: Maroon
-    [0.25, 0.75, 0.0],  # Class 16: Lime
-]
+# Define the device
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+# Define the path to your pretrained model checkpoint
+checkpoint_path = 'checkpoint.pth'
 
-def plot_image_mask(image, mask):
+# Number of classes in your dataset
+num_classes = 16
 
+# Load the model
+model_small = load_lraspp_mobilenet_v3_small(checkpoint_path, num_classes,finetuning=False, device=device)
+model_small.eval().to(device)
 
-    # Create an array for colored mask visualization
-    colored_mask = np.zeros((mask_np.shape[0], mask_np.shape[1], 3), dtype=np.float32)
+# Define the image transformation
+transform = T.Compose([
+    # T.Resize((256, 256)),  # Resize to the input size expected by the model
+    T.ToTensor(),          # Convert the image to a PyTorch tensor
+    T.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),  # Normalize the tensor
+])
 
-    # Colorize the mask
-    for class_id in range(num_classes):
-        mask = mask_np == class_id
-        colored_mask[mask] = colors[class_id]
+# Load the image
+image_path = 'image.jpg'
+image = Image.open(image_path).convert('RGB')
 
-    # Display image and mask
-    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
-    axs[0].imshow(img)
-    axs[0].set_title('Image')
-    axs[0].axis('off')
+# Apply the transformation
+input_tensor = transform(image).unsqueeze(0).to(device)  # Add a batch dimension and move to device
 
-    axs[1].imshow(colored_mask)
-    axs[1].set_title('Mask')
-    axs[1].axis('off')
+# Get the model output
+with torch.no_grad():
+    output = model_small(input_tensor)
 
-    plt.tight_layout()
-    plt.show()
+# The output tensor is in 'out' key of the OrderedDict
+output_tensor = output['out']
 
-# Example usage:
-# num_classes = len(colors)
-# colors_map = ListedColormap(colors)
-# image_path = 'path'
-# mask_path = 'path'
-# # Load image and mask
-# img = Image.open(image_path)
-# mask = Image.open(mask_path)
+# Convert the output tensor to a numpy array
+output_array = output_tensor.detach().cpu().numpy()
 
-# # Convert mask to numpy array
-# mask_np = np.array(mask)
-# plot_image_mask(img, mask_np)
+# Take the argmax to get the class with the highest score for each pixel
+output_image = np.argmax(output_array, axis=1)[0]
+
+# Visualize the original image and the segmentation mask
+plot_image_mask(image, output_image,num_classes=16)
