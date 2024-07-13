@@ -63,19 +63,24 @@ def _lraspp_mobilenetv3(backbone: nn.Module, num_classes: int) -> LRASPP:
 
     return LRASPP(backbone, low_channels, high_channels, num_classes)
 
-def load_lraspp_mobilenet_v3_small(checkpoint_path: str, num_classes: int, device: Optional[torch.device] = None) -> LRASPP:
+def load_lraspp_mobilenet_v3_small(checkpoint_path: str, num_classes: int, finetuning=True, device: Optional[torch.device] = None) -> LRASPP:
     if device is None:
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     backbone = mobilenet_v3_small(dilated=True)
     model = _lraspp_mobilenetv3(backbone, num_classes)
-    pretrained_dict=torch.load(checkpoint_path, map_location=device)['model']
-    model_dict=model.state_dict()
-    # Filter out unnecessary keys (excluding final classifier layer)
-    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict and 'classifier' not in k}
+    if finetuning:
+        pretrained_dict=torch.load(checkpoint_path, map_location=device)['model']
+        model_dict=model.state_dict()
+        # Filter out unnecessary keys (excluding final classifier layer)
+        pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict and 'classifier' not in k}
 
-    # Load the pretrained weights into the model
-    model_dict.update(pretrained_dict)
-    model.load_state_dict(model_dict)
+        # Load the pretrained weights into the model
+        model_dict.update(pretrained_dict)
+        model.load_state_dict(model_dict)
+    else:
+        pretrained_dict=torch.load(checkpoint_path, map_location=device)
+        model.load_state_dict(pretrained_dict)
+        
     return model
 
