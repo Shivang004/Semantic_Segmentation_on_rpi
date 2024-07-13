@@ -59,10 +59,10 @@ if __name__ == "__main__":
     # Load pretrained model
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     checkpoint_path = "lraspp_mbv3_small.pth"
-    num_classes = 21
+    num_classes = 16
     print("Device: ", device)
     # Load pretrained model
-    model = load_pretrained_model(checkpoint_path, num_classes=num_classes, device=device)
+    model = load_pretrained_model(checkpoint_path, num_classes=num_classes,finetuning=True, device=device)
     model.to(device)
     
     # Freeze backbone layers
@@ -70,7 +70,7 @@ if __name__ == "__main__":
         param.requires_grad = False
     
     # Define loss function and optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(ignore_index=-1)
     optimizer = optim.AdamW(model.parameters(), lr=max_lr, weight_decay=weight_decay)
     scheduler = optim.lr_scheduler.OneCycleLR(optimizer, max_lr, epochs=epochs, steps_per_epoch=len(train_loader))
     print(model.eval())
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     history = fit(epochs, model, train_loader, val_loader, criterion, optimizer, scheduler,device=device,epoch_after_unfreeze=epoch_after_unfreeze)
     
     # Optionally save the trained model
-    torch.save(model.state_dict(), 'trained_model.pth')
+    torch.save(model.state_dict(), 'finetuned_model.pth')
     plot_loss(history)
     plot_score(history)
     plot_acc(history)
